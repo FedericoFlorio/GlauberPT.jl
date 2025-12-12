@@ -131,7 +131,7 @@ end
 # Auxiliary function to calculate the inverse of a tensor train using the Newton method
 function inverse_tt(B, bond; steps = 150)
     normalize_eachmatrix!(B)
-    B0 = 1 / estimate_norm_tt(B)
+    B0 = 1 / (2*estimate_norm_tt(B))
     @show B0
 
     # Bn = B0 * (2I - B0 * B)
