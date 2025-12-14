@@ -61,3 +61,12 @@ function parallel_random_P0_fixed(N)
 end
     
 
+
+function transform_init_cond_simple(initial_probs)
+    return [[1-p, p] for p in initial_probs]
+end
+
+function transform_init_cond_multiple(intial_probs)
+    return [[1-p, 0.0, 0.0, p] for p in intial_probs]
+end
+

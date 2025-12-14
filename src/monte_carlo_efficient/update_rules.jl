@@ -82,7 +82,7 @@ function compute_local_energy_change(spins, site_index, j_vector, h_vector)
     end
     
     # ΔE = -2 σᵢ hᵢᵉᶠᶠ
-    return -2 * sigma_i * h_eff
+    return 2 * sigma_i * h_eff
 end
 
 # ============================================

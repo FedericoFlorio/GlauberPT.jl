@@ -95,7 +95,7 @@ end
 """
     mult_sep(A, B): Multiplies two TensorTrains A and B by separating the physical dimensions.
 """
-function mult_sep(A, B)
+function mult_sep_4(A, B)
     d = map(zip(A.tensors,B.tensors)) do (a,b)
         @tullio c[m1,m2,n1,n2,x,y,x1,y1] := a[m1,n1,x,x1] * b[m2,n2,y,y1]
         @cast _[(m1,m2),(n1,n2),(x,y),(x1,y1)] := c[m1,m2,n1,n2,x,y,x1,y1]
@@ -104,7 +104,7 @@ function mult_sep(A, B)
 end
 
 
-function mult_sep(A, B)
+function mult_sep_3(A, B)
     d = map(zip(A.tensors,B.tensors)) do (a,b)
         @tullio c[m1,m2,n1,n2,x,y] := a[m1,n1,x] * b[m2,n2,y]
         @cast _[(m1,m2),(n1,n2),(x,y)] := c[m1,m2,n1,n2,x,y]
