@@ -1,9 +1,9 @@
 module GlauberPT
 
 
-using LogarithmicNumbers,  LinearAlgebra
+using LogarithmicNumbers, LinearAlgebra
 using TensorTrains, TensorCast, Tullio
-using TensorTrains: compress, TruncBondThresh
+using TensorTrains: compress!, TruncBondThresh
 using ProgressMeter, Revise
 using Random, Statistics, Distributions
 using Plots, Colors
@@ -27,7 +27,7 @@ export  # Monte Carlo functions
 
         # Tensor train functions    
         identity_tensor_train,  estimate_norm_tt, divide_by_constant!, multiply_by_constant!,
-        inverse_tt, *, mult_sep, mult_sep_transition, k_step_transition_tt
+        inverse_tt, *, mult_sep, mult_sep_transition, k_step_transition_tt,
 
         random_params, parallel_random_params, random_P0, parallel_random_P0_fixed,
 
@@ -42,7 +42,7 @@ export  # Monte Carlo functions
         build_transition_tensortrain, parallel_transition_tensor_train, 
         transition_rate_inertia, glauber_transition_rate, metropolis_transition_rate,
 
-        ConstantSwap, EnergySwap, distribution_b_tt, 
+        ConstantSwap, EnergySwap, distribution_b_tt, absorb_z_into_matrices!,
         tt_swap
 
 
