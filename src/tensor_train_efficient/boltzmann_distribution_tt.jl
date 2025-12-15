@@ -14,7 +14,7 @@ using TensorTrains: compress!, TruncBondThresh
 ##################################################################################
 
  
-function boltzman_tt(params, Q::Int = 2, σ = x -> 2x - 3)
+function boltzman_tt(params, Q::Int = 2, σ = x -> 2x - 3; coc::Float64 = 1.0)
     # Inferir N del tamaño de h_vector
     N = length(params.h_vector)
     
@@ -31,6 +31,7 @@ function boltzman_tt(params, Q::Int = 2, σ = x -> 2x - 3)
     else
         beta = params.beta  
     end
+    beta *= coc
     #beta = hasproperty(params, :betas[1]) ? params.beta_1 : params.beta
 
     # ============================================

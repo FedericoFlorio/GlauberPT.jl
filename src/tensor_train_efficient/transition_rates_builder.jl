@@ -279,11 +279,11 @@ Construye un TensorTrain que representa la matriz de transición A((x,y)ᵗ, (x,
 """
 
 function parallel_transition_tensor_train(params; update_rule, bond=5, Q = 2, σ = x -> 2x - 3)
-    params_1 = (N = params.N, beta = params.betas[1], j_vector = params.j_vector, h_vector = params.h_vector, p0 = params.p0)
-    params_2 = (N = params.N, beta = params.betas[2], j_vector = params.j_vector, h_vector = params.h_vector, p0 = params.p0)
+    params_1 = (N = params.N, betas = params.betas[1], j_vector = params.j_vector, h_vector = params.h_vector, p0 = params.p0)
+    params_2 = (N = params.N, betas = params.betas[2], j_vector = params.j_vector, h_vector = params.h_vector, p0 = params.p0)
     A1 = build_transition_tensortrain(params_1; update_rule, bond, Q, σ)
     A2 = build_transition_tensortrain(params_2; update_rule, bond, Q, σ)
-    return mult_sep(A1, A2) 
+    return mult_sep_4(A1, A2) 
 end
 
 
@@ -337,7 +337,7 @@ Calculate the probability of transition P(σᵢᵗ⁺¹ = sigma_new | current co
 """
 function transition_rate_inertia(sigma_neighbors, sigma_new, site_index, params)
     N = length(params.h_vector)
-    
+    betas = params.betas !== nothing ? params.betas[1] : params.betas
     if site_index == 1
         # Site 1: only right neighbor
         # sigma_neighbors = [σ₁ᵗ, σ₂ᵗ]
@@ -357,7 +357,7 @@ function transition_rate_inertia(sigma_neighbors, sigma_new, site_index, params)
     end
     
     # Glauber dynamics with inertia
-    return (exp(params.beta * sigma_new * h_eff) / (2 * cosh(params.beta * h_eff)))*(1-params.p0) + params.p0* (sigma_new == sigma_neighbors[site_index == 1 ? 1 : site_index == N ? 2 : 2] ? 1.0 : 0.0)
+    return (exp(betas * sigma_new * h_eff) / (2 * cosh(betas * h_eff)))*(1-params.p0) + params.p0* (sigma_new == sigma_neighbors[site_index == 1 ? 1 : site_index == N ? 2 : 2] ? 1.0 : 0.0)
 end
 
 
@@ -365,6 +365,8 @@ end
 
 function glauber_transition_rate(sigma_neighbors, sigma_new, site_index, params)
     N = length(params.h_vector)
+
+    betas = params.betas !== nothing ? params.betas[1] : params.betas
     
     if site_index == 1
         # Site 1: only right neighbor
@@ -385,35 +387,70 @@ function glauber_transition_rate(sigma_neighbors, sigma_new, site_index, params)
     end
     
     # Glauber dynamics
-    return (exp(params.beta * sigma_new * h_eff) / (2 * cosh(params.beta * h_eff))) 
+    return (exp(betas * sigma_new * h_eff) / (2 * cosh(betas * h_eff))) 
 end
 
 
 # Metropolis transition rate
 
+# function metropolis_transition_rate(sigma_neighbors, sigma_new, site_index, params)
+#     N = length(params.h_vector)
+
+
+#     betas = params.betas !== nothing ? params.betas[1] : params.betas
+    
+#     if site_index == 1
+#         # Site 1: only right neighbor
+#         # sigma_neighbors = [σ₁ᵗ, σ₂ᵗ]
+#         delta_E = params.j_vector[1] * sigma_neighbors[2] + params.h_vector[1]
+#         delta_E *= -sigma_neighbors[1]
+        
+#     elseif site_index == N
+#         # Site N: only left neighbor
+#         # sigma_neighbors = [σₙ₋₁ᵗ, σₙᵗ]
+#         delta_E = params.j_vector[end] * sigma_neighbors[1] + params.h_vector[end] 
+#         delta_E *= -sigma_neighbors[2]
+#     else
+#         # Intermediate site: left and right neighbors
+#         # sigma_neighbors = [σᵢ₋₁ᵗ, σᵢᵗ, σᵢ₊₁ᵗ]
+#         delta_E = params.j_vector[site_index - 1] * sigma_neighbors[1] + 
+#                 params.j_vector[site_index] * sigma_neighbors[3] + 
+#                 params.h_vector[site_index]
+#         delta_E *= -sigma_neighbors[2]
+#     end
+
+#     # Glauber dynamics
+#     return min(exp(-2 * betas * delta_E), 1.0)
+# end
+
+
 function metropolis_transition_rate(sigma_neighbors, sigma_new, site_index, params)
     N = length(params.h_vector)
+    betas = params.betas !== nothing ? params.betas[1] : params.betas
     
     if site_index == 1
         # Site 1: only right neighbor
         # sigma_neighbors = [σ₁ᵗ, σ₂ᵗ]
-        delta_E = params.j_vector[1] * sigma_neighbors[2] + params.h_vector[1]
-        delta_E *= sigma_neighbors[1]
+        h_eff = params.j_vector[1] * sigma_neighbors[2] + params.h_vector[1]
+        delta_E = 2 * sigma_neighbors[1] * h_eff  # ← Factor 2 explícito
         
     elseif site_index == N
         # Site N: only left neighbor
         # sigma_neighbors = [σₙ₋₁ᵗ, σₙᵗ]
-        delta_E = params.j_vector[end] * sigma_neighbors[1] + params.h_vector[end] 
-        delta_E *= sigma_neighbors[2]
+        h_eff = params.j_vector[end] * sigma_neighbors[1] + params.h_vector[end] 
+        delta_E = 2 * sigma_neighbors[2] * h_eff  # ← Factor 2 explícito
     else
         # Intermediate site: left and right neighbors
         # sigma_neighbors = [σᵢ₋₁ᵗ, σᵢᵗ, σᵢ₊₁ᵗ]
-        delta_E = params.j_vector[site_index - 1] * sigma_neighbors[1] + 
+        h_eff = params.j_vector[site_index - 1] * sigma_neighbors[1] + 
                 params.j_vector[site_index] * sigma_neighbors[3] + 
                 params.h_vector[site_index]
-        delta_E *= sigma_neighbors[2]
+        delta_E = 2 * sigma_neighbors[2] * h_eff  # ← Factor 2 explícito
     end
 
-    # Glauber dynamics
-    return min(exp(-2 * params.beta * delta_E), 1.0)
+    if sigma_new == sigma_neighbors[site_index == 1 ? 1 : site_index == N ? 2 : 2]
+        return 1 - min(exp(-betas * delta_E), 1.0)
+    else
+        return min(exp(-betas * delta_E), 1.0)  # ← Ahora solo -beta (sin el 2)
+    end
 end

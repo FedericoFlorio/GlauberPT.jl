@@ -331,6 +331,32 @@ function system_description_over_time(B_t, params)
 end
 
 
+# Just for parallel systems
+
+"""
+    system_description_over_time(B_t, params)
+Calculate all the relevant observables of the system represented by the TensorTrain B_t at different times and the system parameters params.
+Returns a tuple with:
+- full_marginals_t
+- full_second_order_marginals_t
+- full_expected_values_t
+- full_second_moments_t
+- full_correlations_t
+- energy_t
+"""
+
+function system_description_over_time_simple(B_t, params)
+    observables_over_time = (
+        full_expected_values_t = [],
+        energy_t = []
+    )
+    for B in B_t
+        push!(observables_over_time.full_expected_values_t, full_simple_ev_system(B))
+        push!(observables_over_time.energy_t, energy_function_simple(B, params))
+    end
+    return observables_over_time
+end
+
 
 
 

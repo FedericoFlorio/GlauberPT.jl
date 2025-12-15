@@ -24,6 +24,11 @@ function EnergySwap(swap::TensorTrain)
     end
 end
 
+function no_swap()
+    function (B)
+        return B
+    end
+end
 
 function distribution_b_tt(
     A::TensorTrain, 
@@ -35,7 +40,7 @@ function distribution_b_tt(
     save::Bool=true
     )
     
-    compress!(A; svd_trunc=TruncBond(bond))
+    # compress!(A; svd_trunc=TruncBond(bond))
             
     B = TensorTrain([(@tullio _[1,1,x] := pi[x]) for pi in P0])
     lista_B_T = save ? [B] : nothing
