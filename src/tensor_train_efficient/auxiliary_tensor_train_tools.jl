@@ -129,7 +129,7 @@ end
 
 
 # Auxiliary function to calculate the inverse of a tensor train using the Newton method
-function inverse_tt(B, bond; steps = 150)
+function inverse_tt_old(B, bond; steps = 150)
     normalize_eachmatrix!(B)
     B0 = 1 / (2*estimate_norm_tt(B))
     @show B0
@@ -170,42 +170,48 @@ end
 
 
 # Auxiliary function to calculate the inverse of a tensor train using the Newton method
-function inverse_tt_improve(B, bond; steps = 150)
+function inverse_tt(B, bond; steps = 150)
     normalize_eachmatrix!(B)
     B0 = 1 / estimate_norm_tt(B)
-    @show B0
+    # @show B0
 
     # Bn = B0 * (2I - B0 * B)
     temp = multiply_by_constant!(deepcopy(B), B0)
     two = multiply_by_constant!(identity_tensor_train(B), 2)
-    Bn = multiply_by_constant!( two - temp, B0)
+    Bn = multiply_by_constant!(two - temp, B0)
     
     #Bn = Bn - temp
 
-    z_ = 1.0
-    z_acc = Logarithmic(1.0)
+    # z_ = normalize!(Bn)^2
+    # @show z_
+    # z_acc = Logarithmic(z_)
     @showprogress for t in 1:steps
         # X_{n+1} = X_n * (2I - B * X_n)
         temp1 = B * Bn
-        normalize_eachmatrix!(temp1)
+        @assert all(all(isfinite, x) for x in temp1)
+        # normalize_eachmatrix!(temp1)
         compress!(temp1; svd_trunc=TruncBond(bond))
+        @assert all(all(isfinite, x) for x in temp1)
 
         # normalize_eachmatrix!(temp1)
         # absorb_z_into_matrices!(temp1)
         two_ = deepcopy(two)
-        two_ = multiply_by_constant!(two_, z_)
+        # two_ = multiply_by_constant!(two_, z_)
+        @assert all(all(isfinite, x) for x in two_)
         Bnn = two_ - temp1
+        @assert all(all(isfinite, x) for x in Bnn)
 
         # normalize_eachmatrix!(Bnn)
         Bn = Bnn * Bn
-    
+        @assert all(all(isfinite, x) for x in Bn)
         normalize_eachmatrix!(Bn)
-        z_ = normalize!(Bn)
+        # z_ = normalize!(Bn)^2
+        @assert all(all(isfinite, x) for x in Bn)
+        # z_acc *= z_
         compress!(Bn; svd_trunc=TruncBond(bond))
-        z_acc *= z_^2
 
-        @show estimate_norm_tt(Bn) Bn.z
+        # @show estimate_norm_tt(Bn) Bn.z
     end
     normalize_eachmatrix!(Bn)
-    return Bn, z_acc
+    return Bn#, z_acc
 end

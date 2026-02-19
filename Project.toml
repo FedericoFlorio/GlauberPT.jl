@@ -18,6 +18,9 @@ TensorCast = "02d47bb6-7ce6-556a-be16-bb1710789e2b"
 TensorTrains = "89893e69-996d-40b1-ba32-8ff5f34c0dd5"
 Tullio = "bc48ee85-29a4-5162-ae0b-a64e1601d4bc"
 
+[sources]
+TensorTrains = {path = "C:\\Users\\fefif\\Desktop\\PhD\\Note\\Parallel tempering\\TensorTrains.jl"}
+
 [compat]
 Colors = "0.13.1"
 Distributions = "0.25.122"
